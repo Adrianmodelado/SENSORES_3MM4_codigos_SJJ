@@ -1,0 +1,61 @@
+#include <SoftwareSerial.h>
+
+// Define los pines RX y TX para el módulo GPS
+#define GPS_RX_PIN 4
+#define GPS_TX_PIN 3
+
+SoftwareSerial gpsSerial(GPS_RX_PIN, GPS_TX_PIN); // Crea un objeto de tipo SoftwareSerial
+
+void setup() {
+  Serial.begin(9600); // Inicializa la comunicación serial con el monitor serie
+  gpsSerial.begin(9600); // Inicializa la comunicación serial con el módulo GPS
+}
+
+void loop() {
+  if (gpsSerial.available()) { // Verifica si hay datos disponibles desde el GPS
+    String gpsData = gpsSerial.readStringUntil('\n'); // Lee una línea de datos desde el GPS
+    if (gpsData.startsWith("$GPGGA")) { // Verifica si la línea comienza con "$GPGGA"
+      delay(1000);
+   String parts[15]; // 
+      int commaIndex = 0;
+      int prevIndex = 0;
+      int i = 0;
+      while (commaIndex != -1 && i < 15) {
+        commaIndex = gpsData.indexOf(',', prevIndex + 1); // Busca la siguiente coma
+        if (commaIndex != -1) {
+          parts[i] = gpsData.substring(prevIndex, commaIndex); // Almacena la parte entre comas en el arreglo
+          prevIndex = commaIndex + 1; 
+          i++;
+        }
+      }
+      // Almacena la última parte de la cadena
+      parts[i] = gpsData.substring(prevIndex);
+
+            int horaUTC = parts[1].substring(0, 2).toInt(); // Extrae las dos primeras cifras de la hora y las convierte a entero
+      horaUTC -= 6; // Resta 6 horas
+      if (horaUTC < 0) { 
+        horaUTC += 24;
+      }
+      String nuevaHoraUTC = String(horaUTC); // Convierte la hora a cadena
+      if (horaUTC < 10) { 
+        nuevaHoraUTC = "0" + nuevaHoraUTC;
+      }
+
+
+      
+      // Muestra cada parte con su etiqueta descriptiva en el monitor serie
+      Serial.println("Datos GPS:");
+      Serial.println("Hora Mexico: " + nuevaHoraUTC +":"+ parts[1].substring(2,4) +":"+ parts[1].substring(4) + ", Latitud: " + parts[2] + " " + parts[3] + ", Longitud: " + parts[4] + " " + parts[5] + ",Altitud: " + parts[9] + " " + parts[10]);
+      Serial.println("Numero de satelites: " + parts[7]);
+      Serial.println("Precisión horizontal: " + parts[8]);
+       Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+      //Serial.println("Altitud: " + parts[9] + " " + parts[10]);
+      //Serial.println("Diferencia de tiempo DGPS: " + parts[11]);
+     // Serial.println("Altitud del geoide respecto al elipsoide: " + parts[12] + " " + parts[13]);
+     // Serial.println("Suma de comprobación: " + parts[14]);
+    }
+  }
+}
+
+
