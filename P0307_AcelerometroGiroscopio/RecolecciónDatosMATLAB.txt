@@ -1,0 +1,17 @@
+clc;
+clear all ;
+s = serailport("COM3",115200 ,"timeout",5);
+flush(s);
+tic
+i=1;
+while true
+    flush(s)
+    data=readline(s);
+    a=sscanf(data<'<%d,%d>\n');
+    datos(i,1)=a(1);
+    datos(i,2)=a(2);
+    i=i+1;
+    if(toc> 12)
+        break;
+    end
+end
