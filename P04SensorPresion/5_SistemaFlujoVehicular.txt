@@ -1,0 +1,85 @@
+#include <Adafruit_MPL3115A2.h>
+
+Adafruit_MPL3115A2 baro;
+
+unsigned long startTime;
+unsigned long elapsedTime;
+unsigned long interval = 1000; //
+bool counting = false; 
+  int cuenta1=0; // Contador que identifica ejes de llantas de una motocicleta han pasado
+  int cuenta2=0; // Contador que identitifica la cantidad de motocicletas que han pasado por el sistema
+    int cuenta11=0; // Contador que identifica ejes de llantas de un carro han pasado
+  int cuenta22=0; // Contador que identitifica la cantidad de carros que han pasado por el sistema
+    int cuenta111=0; // Contador que identifica ejes de llantas de una camioneta han pasado
+  int cuenta222=0; // Contador que identitifica la cantidad de camionetas que han pasado por el sistema
+void setup() {
+
+
+  Serial.begin(9600);
+  while(!Serial);
+  Serial.println("Adafruit_MPL3115A2 test!");
+
+  if (!baro.begin()) {
+    Serial.println("Could not find sensor. Check wiring.");
+    while(1);
+  }
+
+  // use to set sea level pressure for current location
+  // this is needed for accurate altitude measurement
+  // STD SLP = 1013.26 hPa
+  baro.setSeaPressure(1013.26);
+}
+
+void loop() {
+  float pressure = baro.getPressure();
+  float altitude = baro.getAltitude();
+  float temperature = baro.getTemperature();
+  float density = 348.42*((1-altitude*1.05*0.0001)/(temperature+273.15));
+  float velocidad ;
+
+// Conteos en estructuras condicionales para detectar motocicletas
+    if (pressure >= 770.000){ // Incremento de presión
+      if (pressure <= 780.000){ // Rango de presión ejercida por motocicletas
+      cuenta1=cuenta1+1;
+      if (cuenta1==2){
+        cuenta2=cuenta2+1;
+        cuenta1=0; 
+      }
+    }
+    }
+// Conteos en estructuras condicionales para detectar carros
+    if (pressure >= 770.000){ // Incremento de presión
+      if (pressure <= 800.000){ // Rango de presión ejercida por carros
+      cuenta11=cuenta11+1;
+      if (cuenta1==2){
+        cuenta22=cuenta22+1;
+        cuenta1=0; 
+      }
+    }
+    }
+
+// Conteos en estructuras condicionales para detectar camionetas
+    if (pressure >= 770.000){ // Incremento de presión
+      if (pressure <= 850.000){  // Rango de presión ejercida por camionetas
+      cuenta111=cuenta111+1;
+      if (cuenta1==2){
+        cuenta222=cuenta222+1;
+        cuenta1=0; 
+      }
+    }
+    }
+
+
+  Serial.println("-----------------");
+  Serial.print("Presión = "); Serial.print(pressure,3); Serial.println(" hPa");
+  //Serial.print("Altitud = "); Serial.print(altitude); Serial.println(" m");
+ // Serial.print("Temperatura = "); Serial.print(temperature,3); Serial.println(" C");
+  //Serial.print("Densidad = "); Serial.print(density,3); Serial.println(" km/m^3");
+
+// Impresión de contadores de cada tipo de vehículo
+  Serial.print("MOTOS = "); Serial.println(cuenta2);
+  Serial.print("CARROS = "); Serial.println(cuenta22);
+  Serial.print("CAMIONETAS = "); Serial.println(cuenta222);
+
+  delay(250); // Retardo
+}

@@ -1,0 +1,74 @@
+#include <Adafruit_MPL3115A2.h>
+
+Adafruit_MPL3115A2 baro;
+
+void setup() {
+  Serial.begin(9600);
+  while(!Serial);
+  Serial.println("Adafruit_MPL3115A2 test!");
+
+  if (!baro.begin()) {
+    Serial.println("Could not find sensor. Check wiring.");
+    while(1);
+  }
+
+  // use to set sea level pressure for current location
+  // this is needed for accurate altitude measurement
+  // STD SLP = 1013.26 hPa
+  baro.setSeaPressure(1013.26); // Ajuste de presión a altitud del nivel del mar
+}
+
+void loop() {
+
+  float tempmin, tempmax, aux;
+
+  if (Serial.available() > 0) { // Si hay datos disponibles para leer
+    tempmin = Serial.parseFloat(); // Leer el byte de datos
+    Serial.print("Temperatura mínima diaria: "); Serial.print(tempmin); Serial.println(" °C"); // Temperatura mínima
+    tempmax = Serial.parseFloat(); // Leer el byte de datos
+    Serial.print("Temperatura máxima diaria: "); Serial.print(tempmax); Serial.println(" °C"); // Temperatura máxima
+  }
+  if(tempmin>tempmax){
+    aux = tempmax;
+    tempmax = tempmin;
+    tempmin = aux;
+  }
+
+  float tb = 10; // Temperatura base o umbral (10 °C para el frijol)
+  float uc = (tempmax + tempmin)/2 - tb; // Unidades de calor
+
+// Etapas fenológicas del frijol
+  if (uc>= 12.89 && uc < 61.09){ // Emergencia
+    Serial.println("-----------------");
+    Serial.print("Unidades de Calor = "); Serial.println(uc,3);
+    Serial.println("Fenómeno: Emergencia");
+  }
+  else if (uc>= 61.09 && uc < 89.08){ // Formación de guías
+    Serial.println("-----------------");
+    Serial.print("Unidades de Calor = "); Serial.println(uc,3);
+    Serial.println("Fenómeno: Formación de guías");
+  }
+  else if (uc>= 89.08 && uc < 99.31){ // Floración
+    Serial.println("-----------------");
+    Serial.print("Unidades de Calor = "); Serial.println(uc,3);
+    Serial.println("Fenómeno: Floración");
+  }
+  else if (uc>= 99.31 && uc < 114.97){ // Formación de vainas
+    Serial.println("-----------------");
+    Serial.print("Unidades de Calor = "); Serial.println(uc,3);
+    Serial.println("Fenómeno: Formación de vainas");
+  }
+  else if (uc>= 114.97 && uc < 157.74){ // Llenado de vainas
+    Serial.println("-----------------");
+    Serial.print("Unidades de Calor = "); Serial.println(uc,3);
+    Serial.println("Fenómeno: Llenado de vainas");
+  }
+  else if (uc>= 157.74){ // Maduración
+    Serial.println("-----------------");
+    Serial.print("Unidades de Calor = "); Serial.println(uc,3);
+    Serial.println("Fenómeno: Maduración");
+  }
+  
+  Serial.println("-----------------"); 
+  delay(20000); // Retardo
+}

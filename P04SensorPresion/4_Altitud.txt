@@ -1,0 +1,28 @@
+#include <Adafruit_MPL3115A2.h>
+
+Adafruit_MPL3115A2 baro;
+
+void setup() {
+  Serial.begin(9600);
+  while(!Serial);
+  Serial.println("Adafruit_MPL3115A2 test!");
+
+  if (!baro.begin()) {
+    Serial.println("Could not find sensor. Check wiring.");
+    while(1);
+  }
+
+  // use to set sea level pressure for current location
+  // this is needed for accurate altitude measurement
+  // STD SLP = 1013.26 hPa
+  baro.setSeaPressure(1013); // Ajuste de presión del aire al nivel del mar
+}
+
+void loop() {
+  float altitude = baro.getAltitude(); // Altitud
+
+  Serial.println("-----------------");
+  Serial.print("Altitud = "); Serial.print(altitude, 4); Serial.println(" m"); // Impresión de altitud en metros
+
+  delay(500); // Retardo
+}

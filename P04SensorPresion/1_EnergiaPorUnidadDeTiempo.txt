@@ -1,0 +1,47 @@
+#include <Adafruit_MPL3115A2.h>
+
+Adafruit_MPL3115A2 baro;
+
+void setup() {
+  Serial.begin(9600);
+  while(!Serial);
+  Serial.println("Adafruit_MPL3115A2 test!");
+
+  if (!baro.begin()) {
+    Serial.println("Could not find sensor. Check wiring.");
+    while(1);
+  }
+
+  // use to set sea level pressure for current location
+  // this is needed for accurate altitude measurement
+  // STD SLP = 1013.26 hPa
+  baro.setSeaPressure(1013.26); // Ajuste de presión a nivel del mar
+}
+
+void loop() {
+  float pressure = baro.getPressure(); // presión barométrica del aire 
+  float altitude = baro.getAltitude(); // altitud en metros sobre el nivel del mar
+  float temperature = baro.getTemperature(); // temperatura en °C
+  float hrel = 24.56; // humedad relativa a 2 metros 
+  float wspeed = 6.06; // velocidad del viento (m/s) a 10 metros
+  float area = 3.14159*1*1; // area transversal en la columna de aire
+
+  float density1 = 348.42*((1-altitude*1.05*0.0001)/(temperature+273.15)); // densidad del aire [en función de la altitud y la temperatura]
+  float density2 = (0.348444*pressure - hrel*(0.00252*temperature - 0.020582))/(273.15 + temperature); // densidad del aire [en función de la humedad relativa, la presión y la temperatura]
+  float potency1 = 0.5*area*density1*wspeed*wspeed*wspeed; // Energía cinética del viento por unidad de tiempo [en función de la altitud y la temperatura]
+  float potency2 = 0.5*area*density2*wspeed*wspeed*wspeed; // Energía cinética del viento por unidad de tiempo [en función de la humedad relativa, la presión y la temperatura]
+  float potencywindturbine = potency2*0.3; // Energía por unidad de tiempo que podría almacenar un aerogenerador con una eficiencia de 0.3
+
+  Serial.println("-----------------");
+  Serial.print("Presión = "); Serial.print(pressure,3); Serial.println(" hPa");
+  Serial.print("Altitud = "); Serial.print(altitude); Serial.println(" m");
+  Serial.print("Temperatura = "); Serial.print(temperature,3); Serial.println(" C");
+
+  Serial.print("Densidad [1] = "); Serial.print(density1,3); Serial.println(" kg/m^3");
+  Serial.print("Densidad [2] = "); Serial.print(density2,3); Serial.println(" kg/m^3");
+  Serial.print("Potencia (energía cinética del viento por unidad de tiempo) [1] = "); Serial.print(potency1,3); Serial.println(" W");
+  Serial.print("Potencia (energía cinética del viento por unidad de tiempo) [2] = "); Serial.print(potency2,3); Serial.println(" W");
+  Serial.print("Energía por unidad de tiempo que podría almacenar un aerogenerador con eficiencia de 0.3  = "); Serial.print(potencywindturbine,3); Serial.println(" W");
+
+  delay(1000); // Retardo
+}

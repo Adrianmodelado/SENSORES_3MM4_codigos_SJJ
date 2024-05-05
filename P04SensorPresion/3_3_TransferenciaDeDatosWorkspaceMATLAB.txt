@@ -1,0 +1,5 @@
+clear all
+clc
+
+tiempo = xlsread('temperatura.xlsx', 'A1:A946');
+temperatura = xlsread('temperatura.xlsx', 'B1:B946');
