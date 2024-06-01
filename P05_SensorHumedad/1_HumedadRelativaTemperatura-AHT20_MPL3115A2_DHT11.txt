@@ -1,0 +1,59 @@
+#include <Wire.h>
+#include <AHT20.h>
+#include <Adafruit_MPL3115A2.h>
+#include <DHT.h>
+
+AHT20 aht20;
+Adafruit_MPL3115A2 baro;
+#define DHTPIN 2 // Se define el pin digital donde se conecta el sensor
+#define DHTTYPE DHT11 // Dependiendo del tipo de sensor
+DHT dht(DHTPIN, DHTTYPE); // Inicializarel sensor DHT11
+
+void setup()
+{
+Serial.begin(9600); // Ininicialización de la comunicación serie
+
+baro.setSeaPressure(1013.26); // Ajuste de medición de altitud desde el nivel del mar para el sensor MPL3115A2
+dht.begin(); 
+Wire.begin(); // Inicia el bus I2C
+// Verifica si el AHT20 responde
+if (aht20.begin() == false)
+{
+Serial.println("AHT20 no detectado. Por favor verifica la conexión. Congelando.");
+while (1);
+}
+Serial.println("AHT20 detectado.");
+}
+ 
+void loop(){
+
+  if (aht20.available() == true)  // Si hay una nueva medición disponible
+  {
+
+  float humedadrelativa = aht20.getHumidity(); // Humedad relativa del sensor AHT20
+  float temp1 = aht20.getTemperature();  // Temperatura del sensor AHT20
+  float temp2 = baro.getTemperature(); // Temperatura del sensor MPL3115A2
+  float temp3 = dht.readTemperature(); // Temperatura del sensor DHT11
+  
+  // Impresión de los resultados
+  Serial.print("Humedad relativa (HR): ");
+  Serial.print(humedadrelativa, 2);
+  Serial.println("%");
+
+  Serial.print("Temperatura AHT20: ");
+  Serial.print(temp1, 2);
+  Serial.println(" °C");
+
+  Serial.print("Temperatura MPL3115A2: ");
+  Serial.print(temp2, 2);
+  Serial.println(" °C");
+
+  Serial.print("Temperatura DHT11: ");
+  Serial.print(temp2, 2);
+  Serial.println(" °C");
+  
+  Serial.println("----------------------------------------");
+  }
+
+  delay(100);
+}
