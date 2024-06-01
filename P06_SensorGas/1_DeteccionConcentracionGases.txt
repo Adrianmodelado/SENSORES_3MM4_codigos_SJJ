@@ -1,0 +1,62 @@
+const int sensorPin = A0; // Pin analógico al que está conectado el sensor MiCS 5524
+const int enablePin = 7; // Pin digital para habilitar el sensor MiCS 5524
+
+void setup() {
+  Serial.begin(9600); // Inicialización de la comunicación serial
+  pinMode(enablePin, OUTPUT); // Configuración del pin de habilitación como salida
+  digitalWrite(enablePin, HIGH); // Habilitación el sensor
+}
+
+void loop() {
+
+  int sensorValue = analogRead(sensorPin); // Lectura del valor del sensor
+  float voltage = sensorValue * (5.0 / 1023.0); // Conversión a voltaje
+
+  float carbonmonoxide_concentration = COConcentration(voltage); // Calcular la concentración de monóxido de carbono
+  float ethanol_concentration = EthanolConcentration(voltage); // Calcular la concentración de etanol
+  float dihydrogen_concentration = H2Concentration(voltage); // Calcular la concentración de dihidrógeno
+  float methane_concentration = MethaneConcentration(voltage); // Calcular la concentración de metano
+
+  // Imprimir los valores en el monitor serial
+  // Concentración de monóxido de carbono
+  Serial.print("Concentración de monóxido de carbono (CO): ");
+  Serial.print(carbonmonoxide_concentration);
+  Serial.println(" ppm");
+
+  // Concentración de etanol
+  Serial.print("Concentración de etanol (C2H6O): ");
+  Serial.print(ethanol_concentration);
+  Serial.println(" ppm");
+
+  // Concentración de dihidrógeno
+  Serial.print("Concentración de dihidrógeno (H2): ");
+  Serial.print(dihydrogen_concentration);
+  Serial.println(" ppm");
+
+  // Concentración de metano
+  Serial.print("Concentración de metano (CH4): ");
+  Serial.print(methane_concentration); 
+  Serial.println(" ppm");
+
+  Serial.println("-------------------------------");
+
+  delay(1000); // Retardo de 1 segundo
+}
+
+// Funciones para calcular la concentración de gases con ajuste según la curva de calibración específica
+float COConcentration(float voltage) {
+  float ppm = (voltage - 0.1) * 200;
+  return ppm;
+}
+float EthanolConcentration(float voltage) {
+  float ppm = (voltage - 0.1) * 300;
+  return ppm;
+}
+float H2Concentration(float voltage) {
+  float ppm = (voltage - 0.1) * 250;
+  return ppm;
+}
+float MethaneConcentration(float voltage) {
+  float ppm = (voltage - 0.1) * 400;
+  return ppm;
+}

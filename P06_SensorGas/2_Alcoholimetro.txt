@@ -1,0 +1,50 @@
+const int sensorPin = A0; // Pin analógico al que está conectado el sensor
+const int enablePin = 7; // Pin digital para habilitar el sensor
+
+void setup() {
+  Serial.begin(9600); // Inicialización la comunicación serial
+  pinMode(enablePin, OUTPUT); // Configuración el pin de habilitación como salida
+  digitalWrite(enablePin, HIGH); // Habilitación el sensor
+}
+
+void loop() {
+  int sensorValue = analogRead(sensorPin); // Lectura del valor del sensor
+  float voltage = sensorValue * (5.0 / 1023.0); // Conversión del valor a voltaje
+  float ethanol_concentration = calculateEthanolConcentration(voltage); // Calcular la concentración de etanol
+  float bac = ethanol_concentration / 250; // Calcular el porcentaje de alcohol en a sangre dependiendo de la ecuación de la recta dependiendo de gráfica característica
+
+  // Imprimir los valores en el monitor serial
+  Serial.print("Concentración de etanol (C2H6O): ");
+  Serial.print(ethanol_concentration);
+  Serial.println(" ppm");
+
+  Serial.print("Porcentaje de alcohol en la sangre (BAC): ");
+  Serial.print(bac);
+  Serial.println(" %");
+
+  if (bac>=0 && bac<0.25){
+    Serial.println("Acción que se debe aplicar al conductor: Sin sanción"); 
+  }
+  else if (bac>=0.25 && bac<0.5){
+    Serial.println("Acción que se debe aplicar al conductor: Si es conductor nuevo, puede ser procesado"); 
+  }
+  else if (bac>=0.5 && bac<1){
+     Serial.println("Acción que se debe aplicar al conductor: Prohibición temporal del vehículo y multa");  
+  }
+  else if (bac>=1 && bac<3.5){
+     Serial.println("Acción que se debe aplicar al conductor: El conductor es puesto bajo arresto");   
+  }
+  else if (bac>=3.5){
+     Serial.println("Acción que se debe aplicar al conductor: Se revoca la licencia de conducir, se arresta y se multa al conductor");   
+  }
+
+  Serial.println("--------------------------------------------------------------------------------------------------------------------");
+
+  delay(1000); // Retardo de 1 segundo antes de otra lectura
+}
+
+// Función para calcular la concentración de etanol y ajuste según las especificaciones del sensor y las curvas de calibración
+float calculateEthanolConcentration(float voltage) {
+  float ppm = (voltage - 0.1) * 300;
+  return ppm;
+}
