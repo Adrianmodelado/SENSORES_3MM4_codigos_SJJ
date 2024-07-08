@@ -1,0 +1,114 @@
+#include <Servo.h>
+#include <SoftwareSerial.h>
+#include <Adafruit_MPL3115A2.h>
+#include "Adafruit_VL53L0X.h"
+
+// Pin definitions
+const int sensorPin = A0;
+const int enablePin = 7;
+
+// Objects
+Adafruit_MPL3115A2 baro;
+SoftwareSerial BTSerial(2, 3);
+Servo myServo;
+Adafruit_VL53L0X lox = Adafruit_VL53L0X();
+
+// Variable global para almacenar la medición de distancia
+float distance_mm = 0.0;
+
+void setup() {
+  // Pin configuration
+  pinMode(enablePin, OUTPUT);
+  digitalWrite(enablePin, HIGH);
+
+  // Servo setup
+  myServo.attach(9);
+
+  // Serial and Bluetooth setup
+  Serial.begin(9600);
+  BTSerial.begin(9600);
+
+  // Barometer setup
+  if (!baro.begin()) {
+    Serial.println("Could not find sensor. Check wiring.");
+    while (1);
+  }
+  baro.setSeaPressure(1013.26);
+
+  // VL53L0X setup
+  if (!lox.begin()) {
+    Serial.println(F("Failed to boot VL53L0X"));
+    while (1);
+  }
+}
+
+void loop() {
+  // Read sensor values
+  int sensorValue = analogRead(sensorPin);
+  float voltage = sensorValue * (5.0 / 1023.0);
+  float carbonMonoxide = calculateCOConcentration(voltage);
+  float methane = calculateMethaneConcentration(voltage);
+
+  // Read barometer values
+  float pressure = baro.getPressure();
+  float altitude = baro.getAltitude();
+  float temperature = baro.getTemperature();
+  float density = calculateAirDensity(altitude, temperature);
+
+  // Read distance from VL53L0X
+  readDistance();
+
+  // Move servo
+  moveServo();
+
+  // Prepare and send message
+  String message = prepareMessage(pressure, altitude, temperature, density, methane, carbonMonoxide, distance_mm);
+  BTSerial.println(message);
+
+  delay(50);  // Small delay to avoid saturating communication
+}
+
+// Valor de concentración de monóxido de carbono, metano y densidad del aire
+float calculateCOConcentration(float voltage) {
+  return (voltage - 0.1) * 200;
+}
+
+float calculateMethaneConcentration(float voltage) {
+  return (voltage - 0.1) * 400;
+}
+
+float calculateAirDensity(float altitude, float temperature) {
+  return 348.42 * ((1 - altitude * 1.05 * 0.0001) / (temperature + 273.15));
+}
+
+// Lectura de distancia
+void readDistance() {
+  VL53L0X_RangingMeasurementData_t measure;
+  lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
+
+  if (measure.RangeStatus != 4) {  // phase failures have incorrect data
+    distance_mm = measure.RangeMilliMeter;
+  } else {
+    distance_mm = -1; // Valor para indicar fuera de rango
+  }
+}
+
+// Movimiento del servomotor
+void moveServo() {
+  for (int angle = -30; angle <= 180; angle += 10) {
+    myServo.write(angle);
+    delay(50);
+  }
+}
+
+// Impresión de lecturas y valores medidos
+String prepareMessage(float pressure, float altitude, float temperature, float density, float methane, float carbonMonoxide, float distance) {
+  String message = "Presion: " + String(pressure) +
+                   " Altitud: " + String(altitude) +
+                   " Temperatura: " + String(temperature, 1) +
+                   " Densidad: " + String(density, 3) +
+                   " Metano: " + String(methane, 3) +
+                   " MCarbo:" + String(carbonMonoxide, 2) +
+                   " Distancia:" + String(distance, 2);
+  return message;
+}
